@@ -127,8 +127,6 @@ def calendar_view():
 
     if center_default_day is not None:
         default_panel = f"{month}-{center_default_day}"
-    elif panels:
-        default_panel = sorted(panels.keys())[-1]
     else:
         default_panel = None
 
