@@ -20,37 +20,42 @@
     <a class="nav-btn" href="{{ url_for('calendar_view', year=next_year, month=next_month) }}">&rarr;</a>
   </div>
 
-  <div class="month-block">
-    <div class="cal-grid">
-      <div class="cal-dow sun">일</div>
-      <div class="cal-dow">월</div>
-      <div class="cal-dow">화</div>
-      <div class="cal-dow">수</div>
-      <div class="cal-dow">목</div>
-      <div class="cal-dow">금</div>
-      <div class="cal-dow sat">토</div>
-      {% for _ in range(lead_blanks) %}
-        <div class="cal-cell blank"></div>
-      {% endfor %}
-      {% for c in cells %}
-        <div class="cal-cell" id="cell-{{ c.day }}"
-             {% if c.has %}data-key="{{ c.day }}" onclick="showDay({{ c.day }})"{% endif %}>
-          {% if c.has %}
-            <span class="cap-dot">{{ c.day }}</span>
-          {% else %}
-            <span class="daynum">{{ c.day }}</span>
-          {% endif %}
+  <div class="month-blocks">
+    {% for mb in month_blocks %}
+      <div class="month-block {{ 'is-center' if mb.is_center else 'is-side' }}">
+        <div class="month-block-label">{{ mb.label }}</div>
+        <div class="cal-grid">
+          <div class="cal-dow sun">일</div>
+          <div class="cal-dow">월</div>
+          <div class="cal-dow">화</div>
+          <div class="cal-dow">수</div>
+          <div class="cal-dow">목</div>
+          <div class="cal-dow">금</div>
+          <div class="cal-dow sat">토</div>
+          {% for _ in range(mb.lead_blanks) %}
+            <div class="cal-cell blank"></div>
+          {% endfor %}
+          {% for c in mb.cells %}
+            <div class="cal-cell" id="cell-{{ mb.month }}-{{ c.day }}"
+                 {% if c.has %}data-key="{{ mb.month }}-{{ c.day }}" onclick="showDay('{{ mb.month }}-{{ c.day }}')"{% endif %}>
+              {% if c.has %}
+                <span class="cap-dot">{{ c.day }}</span>
+              {% else %}
+                <span class="daynum">{{ c.day }}</span>
+              {% endif %}
+            </div>
+          {% endfor %}
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
   </div>
 
   <div id="day-panels">
     {% if not panels %}
       <div class="empty">{{ year }}년 {{ month }}월에는 보관된 기록이 없습니다.</div>
     {% endif %}
-    {% for d, p in panels.items() %}
-      <div class="day-panel" id="panel-{{ d }}" style="display:none;">
+    {% for key, p in panels.items() %}
+      <div class="day-panel" id="panel-{{ key }}" style="display:none;">
         <form method="post" action="{{ url_for('delete_captures') }}" onsubmit="return confirm('선택한 이미지를 삭제할까요?');">
           <input type="hidden" name="year" value="{{ p.year }}">
           <input type="hidden" name="month" value="{{ p.month }}">
@@ -83,17 +88,17 @@
   </div>
 
   <script>
-    function showDay(d) {
+    function showDay(key) {
       document.querySelectorAll('.day-panel').forEach(p => p.style.display = 'none');
       document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
-      const panel = document.getElementById('panel-' + d);
+      const panel = document.getElementById('panel-' + key);
       if (panel) panel.style.display = 'block';
-      const cell = document.getElementById('cell-' + d);
+      const cell = document.getElementById('cell-' + key);
       if (cell) cell.classList.add('selected');
       if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     {% if default_panel %}
-      showDay({{ default_panel }});
+      showDay('{{ default_panel }}');
     {% endif %}
   </script>
 {% endblock %}
