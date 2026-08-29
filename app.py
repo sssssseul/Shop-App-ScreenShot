@@ -104,10 +104,11 @@ def calendar_view():
         first_weekday = date(y_m, m_m, 1).weekday()
         lead_blanks = (first_weekday + 1) % 7
         cells = [{"day": d, "has": d in by_day} for d in range(1, days_in_month + 1)]
+        trail_blanks = 42 - lead_blanks - len(cells)
 
         month_blocks.append({
             "year": y_m, "month": m_m, "label": f"{y_m}년 {m_m}월",
-            "lead_blanks": lead_blanks, "cells": cells,
+            "lead_blanks": lead_blanks, "trail_blanks": trail_blanks, "cells": cells,
             "is_center": offset == 0,
         })
 
