@@ -54,7 +54,7 @@
   </div>
 
   <div id="day-panels">
-    {% if not panels %}
+    {% if not default_panel %}
       <div class="empty">{{ year }}년 {{ month }}월에는 보관된 기록이 없습니다.</div>
     {% endif %}
     {% for key, p in panels.items() %}
