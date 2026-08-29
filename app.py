@@ -131,7 +131,7 @@ def calendar_view():
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == "POST":
-        label = request.form.get("label", "").strip() or "제목 없음"
+        label = "Shop App"
         captured_date = request.form.get("captured_date")
         captured_time = request.form.get("captured_time") or "00:00"
         files = request.files.getlist("images")
