@@ -11,6 +11,8 @@
 :root {
   --navy: #0f1b3c;
   --teal: #1ec8a5;
+  --teal-deep: #0e9a80;
+  --coral: #ff7a59;
   --bg: #fafbfc;
   --card: #ffffff;
   --ink: #16213f;
@@ -112,29 +114,31 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
   padding: 18px 14px 20px;
   margin-bottom: 28px;
 }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 .cal-dow { text-align: center; font-size: 13px; font-weight: 700; color: var(--ink); padding-bottom: 10px; }
-.cal-dow.sun { color: #e0574a; }
-.cal-dow.sat { color: var(--teal); }
+.cal-dow.sun { color: var(--coral); }
+.cal-dow.sat { color: var(--teal-deep); }
 .cal-cell {
   aspect-ratio: 1 / 1;
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; color: #b6bdc9;
+  border-radius: 9px;
 }
 .cal-cell.blank { background: transparent; }
+.cal-cell:not(.blank):hover { background: rgba(15,27,60,0.04); }
 
 .cap-dot {
   display: flex; align-items: center; justify-content: center;
   width: 30px; height: 30px;
   border-radius: 50%;
-  color: var(--navy);
+  color: #fff;
   font-weight: 600;
   font-size: 12.5px;
   cursor: pointer;
-  background: #eafaf6;
+  background: var(--teal);
 }
-.cap-dot:hover { background: var(--teal); color: #fff; }
-.cal-cell.selected .cap-dot { background: #159179; color: #fff; }
+.cap-dot:hover { background: var(--teal-deep); }
+.cal-cell.selected .cap-dot { background: #159179; }
 
 /* Day detail panel */
 .panel-head {
@@ -147,16 +151,16 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
 }
 .panel-actions { display: flex; align-items: center; gap: 16px; }
 .delete-btn {
-  font-size: 12px; font-weight: 600; color: #d64545;
+  font-size: 12px; font-weight: 600; color: var(--coral);
   background: none; border: none; padding: 5px 0;
-  border-bottom: 1px solid #d64545; cursor: pointer; font-family: inherit;
+  border-bottom: 1px solid var(--coral); cursor: pointer; font-family: inherit;
 }
-.delete-btn:hover { color: #b73333; border-color: #b73333; }
+.delete-btn:hover { color: #e2603f; border-color: #e2603f; }
 .save-all-btn {
-  font-size: 12px; font-weight: 600; color: var(--teal);
-  padding: 5px 0; border-bottom: 1px solid var(--teal);
+  font-size: 12px; font-weight: 600; color: var(--teal-deep);
+  padding: 5px 0; border-bottom: 1px solid var(--teal-deep);
 }
-.save-all-btn:hover { color: #159179; border-color: #159179; }
+.save-all-btn:hover { color: #0b6152; border-color: #0b6152; }
 
 .panel-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 24px;
@@ -168,7 +172,7 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
 .panel-tile img { width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block; background: #f0f2f5; }
 .panel-meta { padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .panel-label { font-size: 12px; font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.save-btn { font-size: 11px; font-weight: 600; color: var(--teal); flex-shrink: 0; }
+.save-btn { font-size: 11px; font-weight: 600; color: var(--teal-deep); flex-shrink: 0; }
 .save-btn:hover { text-decoration: underline; }
 
 .tile-check {
@@ -184,7 +188,7 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
 .filmstrip { display: flex; flex-direction: column; gap: 18px; }
 .frame { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px; }
 .frame img { width: 100%; display: block; border-radius: 8px; }
-.frame .seq { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--teal); margin-bottom: 8px; font-weight: 600; }
+.frame .seq { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--teal-deep); margin-bottom: 8px; font-weight: 600; }
 
 /* Upload form */
 form.upload-form { display: flex; flex-direction: column; gap: 16px; max-width: 480px; }
@@ -230,4 +234,4 @@ button.submit:hover { background: #16265a; }
     {% block content %}{% endblock %}
   </main>
 </body>
-</html>ㄹ
+</html>
