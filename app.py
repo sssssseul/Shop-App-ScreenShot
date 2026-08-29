@@ -207,6 +207,24 @@ def download_day(year, month, day):
     return send_file(buf, mimetype="application/zip", as_attachment=True, download_name=zip_name)
 
 
+@app.route("/delete", methods=["POST"])
+def delete_captures():
+    ids = [int(i) for i in request.form.getlist("capture_ids") if i.isdigit()]
+    year = request.form.get("year", type=int)
+    month = request.form.get("month", type=int)
+
+    if ids:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM captures WHERE id = ANY(%s)", (ids,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        flash(f"{len(ids)}개 삭제했습니다.")
+
+    return redirect(url_for("calendar_view", year=year, month=month))
+
+
 @app.route("/session/<session_id>")
 def view_session(session_id):
     conn = get_db()
