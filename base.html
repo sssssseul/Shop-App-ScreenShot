@@ -128,7 +128,7 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
-    align-items: start;
+    align-items: stretch;
   }
   .month-block.is-side { display: block; }
   .month-block.is-center { border-color: var(--teal); }
@@ -216,11 +216,12 @@ form.upload-form input[type=text],
 form.upload-form input[type=date],
 form.upload-form input[type=time],
 form.upload-form input[type=file] {
-  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+  width: 100%; min-width: 0; box-sizing: border-box;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
   background: var(--card); font-family: 'Inter', sans-serif; font-size: 14px;
 }
-.row2 { display: flex; gap: 12px; }
-.row2 > div { flex: 1; }
+.row2 { display: flex; gap: 12px; flex-wrap: wrap; }
+.row2 > div { flex: 1 1 150px; min-width: 150px; }
 
 button.submit {
   font-size: 14px; font-weight: 700; background: var(--navy); color: #fff;
