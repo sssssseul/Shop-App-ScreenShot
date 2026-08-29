@@ -78,15 +78,16 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
 
 /* Month tab carousel */
 .month-tabs {
-  display: flex; gap: 2px; overflow-x: auto;
+  display: flex; justify-content: space-between;
   margin-bottom: 28px;
 }
 .month-tab {
-  font-size: 12.5px; font-weight: 500; color: #c7cdd8;
-  padding: 6px 11px; border-radius: 7px; flex-shrink: 0;
+  font-size: 12.5px; font-weight: 500; color: #e3e6ec;
+  padding: 6px 8px; border-radius: 7px; flex-shrink: 0;
+  text-align: center;
 }
-.month-tab.has-data { color: var(--ink-soft); }
-.month-tab.active { background: var(--navy); color: #fff; font-weight: 600; }
+.month-tab.has-data { color: var(--navy); font-weight: 700; background: #eafaf6; }
+.month-tab.active { background: var(--navy); color: #fff; font-weight: 700; }
 
 /* Big current month + arrows */
 .month-nav {
@@ -144,6 +145,13 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
   font-family: 'Inter', 'IBM Plex Sans KR', sans-serif; font-size: 15px; font-weight: 700;
   color: var(--navy);
 }
+.panel-actions { display: flex; align-items: center; gap: 16px; }
+.delete-btn {
+  font-size: 12px; font-weight: 600; color: #d64545;
+  background: none; border: none; padding: 5px 0;
+  border-bottom: 1px solid #d64545; cursor: pointer; font-family: inherit;
+}
+.delete-btn:hover { color: #b73333; border-color: #b73333; }
 .save-all-btn {
   font-size: 12px; font-weight: 600; color: var(--teal);
   padding: 5px 0; border-bottom: 1px solid var(--teal);
@@ -154,6 +162,7 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
   display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 24px;
 }
 .panel-tile {
+  position: relative;
   background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
 }
 .panel-tile img { width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block; background: #f0f2f5; }
@@ -161,6 +170,15 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
 .panel-label { font-size: 12px; font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .save-btn { font-size: 11px; font-weight: 600; color: var(--teal); flex-shrink: 0; }
 .save-btn:hover { text-decoration: underline; }
+
+.tile-check {
+  position: absolute; top: 8px; left: 8px; z-index: 2;
+  width: 22px; height: 22px; border-radius: 6px;
+  background: rgba(255,255,255,0.9);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.tile-check input { width: 16px; height: 16px; accent-color: var(--navy); cursor: pointer; margin: 0; }
 
 /* Session detail (filmstrip) */
 .filmstrip { display: flex; flex-direction: column; gap: 18px; }
