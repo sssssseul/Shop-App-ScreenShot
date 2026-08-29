@@ -57,6 +57,10 @@ nav.tabs a.active { background: var(--teal); color: var(--navy); font-weight: 70
 
 main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
 
+@media (min-width: 900px) {
+  main { max-width: 1080px; }
+}
+
 .flash {
   background: #fef2f2; color: #b91c1c;
   padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 20px;
@@ -107,12 +111,27 @@ main { max-width: 620px; margin: 0 auto; padding: 36px 24px 80px; }
 .nav-btn:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
 
 /* Month calendar grid */
+.month-blocks { display: flex; flex-direction: column; }
+.month-block-label { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin-bottom: 10px; text-align: center; }
 .month-block {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 18px 14px 20px;
   margin-bottom: 28px;
+}
+/* 모바일: 현재(가운데) 달만 노출 */
+.month-block.is-side { display: none; }
+
+@media (min-width: 900px) {
+  .month-blocks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .month-block.is-side { display: block; }
+  .month-block.is-center { border-color: var(--teal); }
 }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 .cal-dow { text-align: center; font-size: 13px; font-weight: 700; color: var(--ink); padding-bottom: 10px; }
