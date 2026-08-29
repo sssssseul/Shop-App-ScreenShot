@@ -77,38 +77,59 @@ def calendar_view():
     )
     months_with_data = {r["m"] for r in cur.fetchall()}
 
-    cur.execute(
-        """SELECT id, session_id, label, sequence, captured_at
-           FROM captures
-           WHERE EXTRACT(YEAR FROM captured_at) = %s
-             AND EXTRACT(MONTH FROM captured_at) = %s
-           ORDER BY captured_at ASC, sequence ASC""",
-        (year, month),
-    )
-    rows = cur.fetchall()
+    def shift(y, m, offset):
+        idx = (y * 12 + (m - 1)) + offset
+        return idx // 12, (idx % 12) + 1
+
+    panels = {}
+    month_blocks = []
+    center_default_day = None
+
+    for offset in (-1, 0, 1):
+        y_m, m_m = shift(year, month, offset)
+        cur.execute(
+            """SELECT id, session_id, label, sequence, captured_at
+               FROM captures
+               WHERE EXTRACT(YEAR FROM captured_at) = %s
+                 AND EXTRACT(MONTH FROM captured_at) = %s
+               ORDER BY captured_at ASC, sequence ASC""",
+            (y_m, m_m),
+        )
+        rows = cur.fetchall()
+        by_day = {}
+        for r in rows:
+            by_day.setdefault(r["captured_at"].day, []).append(r)
+
+        days_in_month = pycalendar.monthrange(y_m, m_m)[1]
+        first_weekday = date(y_m, m_m, 1).weekday()
+        lead_blanks = (first_weekday + 1) % 7
+        cells = [{"day": d, "has": d in by_day} for d in range(1, days_in_month + 1)]
+
+        month_blocks.append({
+            "year": y_m, "month": m_m, "label": f"{y_m}년 {m_m}월",
+            "lead_blanks": lead_blanks, "cells": cells,
+            "is_center": offset == 0,
+        })
+
+        for d, shots in by_day.items():
+            panels[f"{m_m}-{d}"] = {
+                "date_str": f"{y_m}-{m_m:02d}-{d:02d}",
+                "year": y_m, "month": m_m, "day": d,
+                "shots": shots,
+            }
+            if offset == 0:
+                if center_default_day is None or d > center_default_day:
+                    center_default_day = d
+
     cur.close()
     conn.close()
 
-    by_day = {}
-    for r in rows:
-        by_day.setdefault(r["captured_at"].day, []).append(r)
-
-    days_in_month = pycalendar.monthrange(year, month)[1]
-    first_weekday = date(year, month, 1).weekday()
-    lead_blanks = (first_weekday + 1) % 7
-    cells = []
-    for d in range(1, days_in_month + 1):
-        cells.append({"day": d, "has": d in by_day})
-
-    panels = {}
-    for d, shots in by_day.items():
-        panels[d] = {
-            "date_str": f"{year}-{month:02d}-{d:02d}",
-            "year": year, "month": month, "day": d,
-            "shots": shots,
-        }
-
-    default_panel = max(by_day.keys()) if by_day else None
+    if center_default_day is not None:
+        default_panel = f"{month}-{center_default_day}"
+    elif panels:
+        default_panel = sorted(panels.keys())[-1]
+    else:
+        default_panel = None
 
     prev_month, prev_year = (12, year - 1) if month == 1 else (month - 1, year)
     next_month, next_year = (1, year + 1) if month == 12 else (month + 1, year)
@@ -121,7 +142,7 @@ def calendar_view():
     return render_template(
         "calendar.html",
         year=year, month=month, years=years, month_tabs=month_tabs,
-        lead_blanks=lead_blanks, cells=cells,
+        month_blocks=month_blocks,
         panels=panels, default_panel=default_panel,
         prev_year=prev_year, prev_month=prev_month,
         next_year=next_year, next_month=next_month,
