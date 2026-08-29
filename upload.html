@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}업로드 — Screen Archive{% endblock %}
+{% block content %}
+  <form class="upload-form" method="post" enctype="multipart/form-data">
+    <div>
+      <label>제목 (예: 삼성샵 메인)</label>
+      <input type="text" name="label" placeholder="삼성샵 메인" required>
+    </div>
+    <div class="row2">
+      <div>
+        <label>캡처 날짜</label>
+        <input type="date" name="captured_date" value="{{ today }}" required>
+      </div>
+      <div>
+        <label>캡처 시각</label>
+        <input type="time" name="captured_time" value="09:00">
+      </div>
+    </div>
+    <div>
+      <label>이미지 (여러 장 선택 시 선택한 순서대로 저장됩니다)</label>
+      <input type="file" name="images" accept="image/*" multiple required>
+    </div>
+    <button class="submit" type="submit">기록 보관</button>
+  </form>
+{% endblock %}

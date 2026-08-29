@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ label }} — Screen Archive{% endblock %}
+{% block content %}
+  <div class="panel-head">
+    <span class="panel-date">{{ captured_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    <span class="mono">{{ label }}</span>
+  </div>
+  <div class="filmstrip">
+    {% for shot in shots %}
+      <div class="frame">
+        <div class="seq">Image {{ shot.sequence }}</div>
+        <img src="{{ url_for('image', capture_id=shot.id) }}" alt="{{ label }} #{{ shot.sequence }}">
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

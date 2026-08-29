@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}캘린더 — Screen Archive{% endblock %}
+{% block content %}
+  <div class="year-tabs">
+    {% for y in years %}
+      <a href="{{ url_for('calendar_view', year=y, month=month) }}" class="year-tab {{ 'active' if y == year else '' }}">{{ y }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="month-tabs">
+    {% for mt in month_tabs %}
+      <a href="{{ url_for('calendar_view', year=year, month=mt.num) }}"
+         class="month-tab {{ 'active' if mt.num == month else '' }} {{ 'has-data' if mt.has_data else '' }}">{{ mt.name }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="month-nav">
+    <a class="nav-btn" href="{{ url_for('calendar_view', year=prev_year, month=prev_month) }}">&larr;</a>
+    <h1 class="month-title">{{ year }}년 {{ month }}월</h1>
+    <a class="nav-btn" href="{{ url_for('calendar_view', year=next_year, month=next_month) }}">&rarr;</a>
+  </div>
+
+  <div class="month-block">
+    <div class="cal-grid">
+      <div class="cal-dow sun">일</div>
+      <div class="cal-dow">월</div>
+      <div class="cal-dow">화</div>
+      <div class="cal-dow">수</div>
+      <div class="cal-dow">목</div>
+      <div class="cal-dow">금</div>
+      <div class="cal-dow sat">토</div>
+      {% for _ in range(lead_blanks) %}
+        <div class="cal-cell blank"></div>
+      {% endfor %}
+      {% for c in cells %}
+        <div class="cal-cell" id="cell-{{ c.day }}"
+             {% if c.has %}data-key="{{ c.day }}" onclick="showDay({{ c.day }})"{% endif %}>
+          {% if c.has %}
+            <span class="cap-dot">{{ c.day }}</span>
+          {% else %}
+            <span class="daynum">{{ c.day }}</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div id="day-panels">
+    {% if not panels %}
+      <div class="empty">{{ year }}년 {{ month }}월에는 보관된 기록이 없습니다.</div>
+    {% endif %}
+    {% for d, p in panels.items() %}
+      <div class="day-panel" id="panel-{{ d }}" style="display:none;">
+        <div class="panel-head">
+          <span class="panel-date">{{ p.date_str }}</span>
+          <a class="save-all-btn" href="{{ url_for('download_day', year=p.year, month=p.month, day=p.day) }}">전체 저장 ({{ p.shots|length }})</a>
+        </div>
+        <div class="panel-grid">
+          {% for s in p.shots %}
+            <div class="panel-tile">
+              <a href="{{ url_for('view_session', session_id=s.session_id) }}">
+                <img src="{{ url_for('image', capture_id=s.id) }}" alt="{{ s.label }}">
+              </a>
+              <div class="panel-meta">
+                <span class="panel-label">{{ s.label }}</span>
+                <a class="save-btn" href="{{ url_for('image', capture_id=s.id) }}" download>저장</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    function showDay(d) {
+      document.querySelectorAll('.day-panel').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
+      const panel = document.getElementById('panel-' + d);
+      if (panel) panel.style.display = 'block';
+      const cell = document.getElementById('cell-' + d);
+      if (cell) cell.classList.add('selected');
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    {% if default_panel %}
+      showDay({{ default_panel }});
+    {% endif %}
+  </script>
+{% endblock %}
