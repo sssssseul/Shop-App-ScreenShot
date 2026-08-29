@@ -45,6 +45,9 @@
               {% endif %}
             </div>
           {% endfor %}
+          {% for _ in range(mb.trail_blanks) %}
+            <div class="cal-cell blank"></div>
+          {% endfor %}
         </div>
       </div>
     {% endfor %}
