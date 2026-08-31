@@ -11,7 +11,7 @@ import psycopg2
 import psycopg2.extras
 from flask import (
     Flask, request, redirect, url_for, render_template,
-    send_file, abort, flash
+    send_file, abort, flash, jsonify
 )
 
 app = Flask(__name__, template_folder=".")
@@ -277,6 +277,38 @@ def compare_days():
         abort(404)
 
     return render_template("compare.html", day_a=day_a, day_b=day_b)
+
+
+@app.route("/compare_data")
+def compare_data():
+    date_a = request.args.get("a")
+    date_b = request.args.get("b")
+
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    day_a = _fetch_day_shots(cur, date_a)
+    day_b = _fetch_day_shots(cur, date_b)
+    cur.close()
+    conn.close()
+
+    if not day_a or not day_b:
+        abort(404)
+
+    def serialize(day):
+        return {
+            "date_str": day["date_str"],
+            "shots": [
+                {
+                    "id": s["id"],
+                    "label": s["label"],
+                    "sequence": s["sequence"],
+                    "image_url": url_for("image", capture_id=s["id"]),
+                }
+                for s in day["shots"]
+            ],
+        }
+
+    return jsonify({"a": serialize(day_a), "b": serialize(day_b)})
 
 
 @app.route("/session/<session_id>")
