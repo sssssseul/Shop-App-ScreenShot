@@ -261,24 +261,6 @@ def _fetch_day_shots(cur, date_str):
     return {"date_str": date_str, "shots": shots}
 
 
-@app.route("/compare")
-def compare_days():
-    date_a = request.args.get("a")
-    date_b = request.args.get("b")
-
-    conn = get_db()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    day_a = _fetch_day_shots(cur, date_a)
-    day_b = _fetch_day_shots(cur, date_b)
-    cur.close()
-    conn.close()
-
-    if not day_a or not day_b:
-        abort(404)
-
-    return render_template("compare.html", day_a=day_a, day_b=day_b)
-
-
 @app.route("/compare_data")
 def compare_data():
     date_a = request.args.get("a")
