@@ -58,6 +58,8 @@
     {% endfor %}
   </div>
 
+  <div id="compareResult"></div>
+
   <div id="day-panels">
     {% if not default_panel %}
       <div class="empty">{{ year }}년 {{ month }}월에는 보관된 기록이 없습니다.</div>
@@ -112,6 +114,7 @@
       }
       const bar = document.getElementById('compareBar');
       if (bar) bar.remove();
+      document.getElementById('compareResult').innerHTML = '';
     }
 
     function updateCompareCount() {
@@ -152,6 +155,7 @@
     function renderCompareBar() {
       let bar = document.getElementById('compareBar');
       if (bar) bar.remove();
+      document.getElementById('compareResult').innerHTML = '';
 
       if (compareSelection.length !== 2) return;
 
@@ -160,8 +164,34 @@
       bar.className = 'compare-bar';
       const a = compareSelection[0].dateStr;
       const b = compareSelection[1].dateStr;
-      bar.innerHTML = '<a class="compare-go-btn" href="/compare?a=' + a + '&b=' + b + '">' + a + ' vs ' + b + ' 비교하기 &rarr;</a>';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'compare-go-btn';
+      btn.textContent = '비교하기';
+      btn.onclick = function () { loadCompareResult(a, b); };
+      bar.appendChild(btn);
       document.querySelector('.month-blocks').insertAdjacentElement('afterend', bar);
+    }
+
+    function loadCompareResult(a, b) {
+      const container = document.getElementById('compareResult');
+      container.innerHTML = '<div class="empty">불러오는 중...</div>';
+      fetch('/compare_data?a=' + a + '&b=' + b)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          function renderCol(day) {
+            let tiles = day.shots.map(function (s) {
+              return '<div class="panel-tile"><img src="' + s.image_url + '" alt="' + s.label + '">' +
+                '<div class="panel-meta"><span class="panel-label">' + s.label + ' #' + s.sequence + '</span></div></div>';
+            }).join('');
+            if (!day.shots.length) tiles = '<div class="empty">이 날짜에는 기록이 없습니다.</div>';
+            return '<div class="compare-result-col"><span class="panel-date">' + day.date_str + '</span>' +
+              '<div class="compare-result-shots">' + tiles + '</div></div>';
+          }
+          container.innerHTML = '<div class="compare-result"><div class="compare-result-grid">' +
+            renderCol(data.a) + renderCol(data.b) + '</div></div>';
+          container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
     }
 
     function showDay(key) {
