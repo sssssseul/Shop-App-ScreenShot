@@ -20,6 +20,11 @@
     <a class="nav-btn" href="{{ url_for('calendar_view', year=next_year, month=next_month) }}">&rarr;</a>
   </div>
 
+  <div class="compare-toggle-row">
+    <button type="button" id="compareToggleBtn" class="compare-toggle" onclick="toggleCompareMode()">비교 모드</button>
+    <span id="compareHint" class="compare-hint" style="display:none;">날짜 2개를 선택하세요 (<span id="compareCount">0</span>/2)</span>
+  </div>
+
   <div class="month-blocks">
     {% for mb in month_blocks %}
       <div class="month-block {{ 'is-center' if mb.is_center else 'is-side' }}">
@@ -37,7 +42,7 @@
           {% endfor %}
           {% for c in mb.cells %}
             <div class="cal-cell" id="cell-{{ mb.month }}-{{ c.day }}"
-                 {% if c.has %}data-key="{{ mb.month }}-{{ c.day }}" onclick="showDay('{{ mb.month }}-{{ c.day }}')"{% endif %}>
+                 {% if c.has %}data-key="{{ mb.month }}-{{ c.day }}" data-date="{{ mb.year }}-{{ '%02d'|format(mb.month) }}-{{ '%02d'|format(c.day) }}" onclick="cellClick('{{ mb.month }}-{{ c.day }}')"{% endif %}>
               {% if c.has %}
                 <span class="cap-dot">{{ c.day }}</span>
               {% else %}
@@ -91,6 +96,74 @@
   </div>
 
   <script>
+    let compareMode = false;
+    let compareSelection = [];
+
+    function toggleCompareMode() {
+      compareMode = !compareMode;
+      compareSelection = [];
+      document.getElementById('compareToggleBtn').classList.toggle('active', compareMode);
+      document.getElementById('compareHint').style.display = compareMode ? 'inline' : 'none';
+      updateCompareCount();
+      document.querySelectorAll('.cal-cell.compare-picked').forEach(c => c.classList.remove('compare-picked'));
+      if (compareMode) {
+        document.querySelectorAll('.day-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
+      }
+      const bar = document.getElementById('compareBar');
+      if (bar) bar.remove();
+    }
+
+    function updateCompareCount() {
+      const el = document.getElementById('compareCount');
+      if (el) el.textContent = compareSelection.length;
+    }
+
+    function cellClick(key) {
+      if (compareMode) {
+        compareSelectCell(key);
+      } else {
+        showDay(key);
+      }
+    }
+
+    function compareSelectCell(key) {
+      const cell = document.getElementById('cell-' + key);
+      if (!cell) return;
+      const dateStr = cell.getAttribute('data-date');
+
+      const idx = compareSelection.findIndex(x => x.key === key);
+      if (idx !== -1) {
+        compareSelection.splice(idx, 1);
+        cell.classList.remove('compare-picked');
+        updateCompareCount();
+        renderCompareBar();
+        return;
+      }
+
+      if (compareSelection.length >= 2) return;
+
+      compareSelection.push({ key, dateStr });
+      cell.classList.add('compare-picked');
+      updateCompareCount();
+      renderCompareBar();
+    }
+
+    function renderCompareBar() {
+      let bar = document.getElementById('compareBar');
+      if (bar) bar.remove();
+
+      if (compareSelection.length !== 2) return;
+
+      bar = document.createElement('div');
+      bar.id = 'compareBar';
+      bar.className = 'compare-bar';
+      const a = compareSelection[0].dateStr;
+      const b = compareSelection[1].dateStr;
+      bar.innerHTML = '<a class="compare-go-btn" href="/compare?a=' + a + '&b=' + b + '">' + a + ' vs ' + b + ' 비교하기 &rarr;</a>';
+      document.querySelector('.month-blocks').insertAdjacentElement('afterend', bar);
+    }
+
     function showDay(key) {
       document.querySelectorAll('.day-panel').forEach(p => p.style.display = 'none');
       document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
