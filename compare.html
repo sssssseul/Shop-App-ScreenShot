@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}날짜 비교 — Screen Archive{% endblock %}
+{% block content %}
+  <a href="{{ url_for('calendar_view') }}" class="back-link">&larr; 캘린더로</a>
+
+  <div class="compare-grid">
+    <div class="compare-col">
+      <div class="panel-date">{{ day_a.date_str }}</div>
+      {% if not day_a.shots %}
+        <div class="empty">이 날짜에는 기록이 없습니다.</div>
+      {% endif %}
+      <div class="compare-shots">
+        {% for s in day_a.shots %}
+          <div class="panel-tile">
+            <img src="{{ url_for('image', capture_id=s.id) }}" alt="{{ s.label }}">
+            <div class="panel-meta">
+              <span class="panel-label">{{ s.label }} #{{ s.sequence }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="compare-col">
+      <div class="panel-date">{{ day_b.date_str }}</div>
+      {% if not day_b.shots %}
+        <div class="empty">이 날짜에는 기록이 없습니다.</div>
+      {% endif %}
+      <div class="compare-shots">
+        {% for s in day_b.shots %}
+          <div class="panel-tile">
+            <img src="{{ url_for('image', capture_id=s.id) }}" alt="{{ s.label }}">
+            <div class="panel-meta">
+              <span class="panel-label">{{ s.label }} #{{ s.sequence }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
