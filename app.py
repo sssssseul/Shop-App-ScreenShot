@@ -359,6 +359,56 @@ def compare_data():
     return jsonify({"a": serialize(day_a), "b": serialize(day_b)})
 
 
+def _fetch_session_shots(cur, session_id):
+    cur.execute(
+        """SELECT id, session_id, label, sequence, captured_at
+           FROM captures
+           WHERE session_id = %s
+           ORDER BY sequence ASC""",
+        (session_id,),
+    )
+    shots = cur.fetchall()
+    if not shots:
+        return None
+    first = shots[0]
+    return {
+        "label_str": f"{first['captured_at'].strftime('%Y-%m-%d')} ({first['captured_at'].strftime('%H:%M')})",
+        "shots": shots,
+    }
+
+
+@app.route("/compare_sessions")
+def compare_sessions():
+    session_a = request.args.get("a")
+    session_b = request.args.get("b")
+
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    a = _fetch_session_shots(cur, session_a)
+    b = _fetch_session_shots(cur, session_b)
+    cur.close()
+    conn.close()
+
+    if not a or not b:
+        abort(404)
+
+    def serialize(day):
+        return {
+            "label_str": day["label_str"],
+            "shots": [
+                {
+                    "id": s["id"],
+                    "label": s["label"],
+                    "sequence": s["sequence"],
+                    "image_url": url_for("image", capture_id=s["id"]),
+                }
+                for s in day["shots"]
+            ],
+        }
+
+    return jsonify({"a": serialize(a), "b": serialize(b)})
+
+
 @app.route("/session/<session_id>")
 def view_session(session_id):
     conn = get_db()
