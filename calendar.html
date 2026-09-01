@@ -22,7 +22,7 @@
 
   <div class="compare-toggle-row">
     <button type="button" id="compareToggleBtn" class="compare-toggle" onclick="toggleCompareMode()">비교 모드</button>
-    <span id="compareHint" class="compare-hint" style="display:none;">날짜 2개를 선택하세요 (<span id="compareCount">0</span>/2)</span>
+    <span id="compareHint" class="compare-hint" style="visibility:hidden;">날짜 2개를 선택하세요 (<span id="compareCount">0</span>/2)</span>
   </div>
 
   <div class="month-blocks">
@@ -105,7 +105,7 @@
       compareMode = !compareMode;
       compareSelection = [];
       document.getElementById('compareToggleBtn').classList.toggle('active', compareMode);
-      document.getElementById('compareHint').style.display = compareMode ? 'inline' : 'none';
+      document.getElementById('compareHint').style.visibility = compareMode ? 'visible' : 'hidden';
       updateCompareCount();
       document.querySelectorAll('.cal-cell.compare-picked').forEach(c => c.classList.remove('compare-picked'));
       if (compareMode) {
