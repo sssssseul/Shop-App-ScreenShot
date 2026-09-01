@@ -65,6 +65,8 @@
       <div class="empty">{{ year }}년 {{ month }}월에는 보관된 기록이 없습니다.</div>
     {% endif %}
     {% for key, p in panels.items() %}
+      {% set ns = namespace(total=0) %}
+      {% for grp in p.sessions %}{% set ns.total = ns.total + grp.shots|length %}{% endfor %}
       <div class="day-panel" id="panel-{{ key }}" style="display:none;">
         <form method="post" action="{{ url_for('delete_captures') }}" onsubmit="return confirm('선택한 이미지를 삭제할까요?');">
           <input type="hidden" name="year" value="{{ p.year }}">
@@ -73,25 +75,28 @@
             <span class="panel-date">{{ p.date_str }}</span>
             <div class="panel-actions">
               <button type="submit" class="delete-btn">선택 삭제</button>
-              <a class="save-all-btn" href="{{ url_for('download_day', year=p.year, month=p.month, day=p.day) }}">전체 저장 ({{ p.shots|length }})</a>
+              <a class="save-all-btn" href="{{ url_for('download_day', year=p.year, month=p.month, day=p.day) }}">전체 저장 ({{ ns.total }})</a>
             </div>
           </div>
-          <div class="panel-grid">
-            {% for s in p.shots %}
-              <div class="panel-tile">
-                <label class="tile-check">
-                  <input type="checkbox" name="capture_ids" value="{{ s.id }}">
-                </label>
-                <a href="{{ url_for('view_session', session_id=s.session_id) }}">
-                  <img src="{{ url_for('image', capture_id=s.id) }}" alt="{{ s.label }}">
-                </a>
-                <div class="panel-meta">
-                  <span class="panel-label">{{ s.label }}</span>
-                  <a class="save-btn" href="{{ url_for('image', capture_id=s.id) }}" download>저장</a>
+          {% for grp in p.sessions %}
+            <div class="session-time-label">{{ grp.time_str }}</div>
+            <div class="panel-grid">
+              {% for s in grp.shots %}
+                <div class="panel-tile">
+                  <label class="tile-check">
+                    <input type="checkbox" name="capture_ids" value="{{ s.id }}">
+                  </label>
+                  <a href="{{ url_for('view_session', session_id=s.session_id) }}">
+                    <img src="{{ url_for('image', capture_id=s.id) }}" alt="{{ s.label }}">
+                  </a>
+                  <div class="panel-meta">
+                    <span class="panel-label">{{ s.label }}</span>
+                    <a class="save-btn" href="{{ url_for('image', capture_id=s.id) }}" download>저장</a>
+                  </div>
                 </div>
-              </div>
-            {% endfor %}
-          </div>
+              {% endfor %}
+            </div>
+          {% endfor %}
         </form>
       </div>
     {% endfor %}
@@ -203,13 +208,16 @@
         .then(function (res) { return res.json(); })
         .then(function (data) {
           function renderCol(day) {
-            let tiles = day.shots.map(function (s) {
-              return '<div class="panel-tile"><img src="' + s.image_url + '" alt="' + s.label + '">' +
-                '<div class="panel-meta"><span class="panel-label">' + s.label + ' #' + s.sequence + '</span></div></div>';
+            let body = day.sessions.map(function (grp) {
+              let tiles = grp.shots.map(function (s) {
+                return '<div class="panel-tile"><img src="' + s.image_url + '" alt="' + s.label + '">' +
+                  '<div class="panel-meta"><span class="panel-label">' + s.label + ' #' + s.sequence + '</span></div></div>';
+              }).join('');
+              return '<div class="session-time-label">' + grp.time_str + '</div>' +
+                '<div class="compare-result-shots">' + tiles + '</div>';
             }).join('');
-            if (!day.shots.length) tiles = '<div class="empty">이 날짜에는 기록이 없습니다.</div>';
-            return '<div class="compare-result-col"><span class="panel-date">' + day.date_str + '</span>' +
-              '<div class="compare-result-shots">' + tiles + '</div></div>';
+            if (!day.sessions.length) body = '<div class="empty">이 날짜에는 기록이 없습니다.</div>';
+            return '<div class="compare-result-col"><span class="panel-date">' + day.date_str + '</span>' + body + '</div>';
           }
           container.innerHTML = '<div class="compare-result"><div class="compare-result-grid">' +
             renderCol(data.a) + renderCol(data.b) + '</div></div>';
