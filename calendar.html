@@ -73,6 +73,13 @@
             <div class="panel-head">
               <span class="panel-date">{{ p.date_str }} ({{ grp.time_str }})</span>
               <div class="panel-actions">
+                <label class="session-compare-check">
+                  <input type="checkbox" class="session-cmp"
+                         data-session="{{ grp.session_id }}"
+                         data-label="{{ p.date_str }} ({{ grp.time_str }})"
+                         onclick="toggleSessionCompare(this)">
+                  비교
+                </label>
                 <button type="submit" class="delete-btn">선택 삭제</button>
                 <a class="save-all-btn" href="{{ url_for('download_session', session_id=grp.session_id) }}">전체 저장 ({{ grp.shots|length }})</a>
               </div>
@@ -230,6 +237,66 @@
       const cell = document.getElementById('cell-' + key);
       if (cell) cell.classList.add('selected');
       if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 세션(날짜+시간) 단위 비교
+    let sessionCompareSelection = [];
+
+    function toggleSessionCompare(checkbox) {
+      const sessionId = checkbox.getAttribute('data-session');
+      const label = checkbox.getAttribute('data-label');
+
+      if (checkbox.checked) {
+        if (sessionCompareSelection.length >= 2) {
+          checkbox.checked = false;
+          return;
+        }
+        sessionCompareSelection.push({ session_id: sessionId, label: label });
+      } else {
+        sessionCompareSelection = sessionCompareSelection.filter(x => x.session_id !== sessionId);
+      }
+      renderSessionCompareBar();
+    }
+
+    function renderSessionCompareBar() {
+      let bar = document.getElementById('sessionCompareBar');
+      if (bar) bar.remove();
+      document.getElementById('compareResult').innerHTML = '';
+
+      if (sessionCompareSelection.length !== 2) return;
+
+      bar = document.createElement('div');
+      bar.id = 'sessionCompareBar';
+      bar.className = 'compare-bar';
+      const a = sessionCompareSelection[0].session_id;
+      const b = sessionCompareSelection[1].session_id;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'compare-go-btn';
+      btn.textContent = '확인';
+      btn.onclick = function () { loadSessionCompareResult(a, b); };
+      bar.appendChild(btn);
+      document.getElementById('day-panels').insertAdjacentElement('afterend', bar);
+    }
+
+    function loadSessionCompareResult(a, b) {
+      const container = document.getElementById('compareResult');
+      container.innerHTML = '<div class="empty">불러오는 중...</div>';
+      fetch('/compare_sessions?a=' + a + '&b=' + b)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          function renderCol(day) {
+            let tiles = day.shots.map(function (s) {
+              return '<div class="panel-tile"><img src="' + s.image_url + '" alt="' + s.label + '">' +
+                '<div class="panel-meta"><span class="panel-label">' + s.label + ' #' + s.sequence + '</span></div></div>';
+            }).join('');
+            return '<div class="compare-result-col"><span class="panel-date">' + day.label_str + '</span>' +
+              '<div class="compare-result-shots">' + tiles + '</div></div>';
+          }
+          container.innerHTML = '<div class="compare-result"><div class="compare-result-grid">' +
+            renderCol(data.a) + renderCol(data.b) + '</div></div>';
+          container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
     }
 
     applyCompareModeUI();
