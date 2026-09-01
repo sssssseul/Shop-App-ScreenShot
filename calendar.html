@@ -65,21 +65,18 @@
       <div class="empty">{{ year }}년 {{ month }}월에는 보관된 기록이 없습니다.</div>
     {% endif %}
     {% for key, p in panels.items() %}
-      {% set ns = namespace(total=0) %}
-      {% for grp in p.sessions %}{% set ns.total = ns.total + grp.shots|length %}{% endfor %}
       <div class="day-panel" id="panel-{{ key }}" style="display:none;">
-        <form method="post" action="{{ url_for('delete_captures') }}" onsubmit="return confirm('선택한 이미지를 삭제할까요?');">
-          <input type="hidden" name="year" value="{{ p.year }}">
-          <input type="hidden" name="month" value="{{ p.month }}">
-          <div class="panel-head">
-            <span class="panel-date">{{ p.date_str }}</span>
-            <div class="panel-actions">
-              <button type="submit" class="delete-btn">선택 삭제</button>
-              <a class="save-all-btn" href="{{ url_for('download_day', year=p.year, month=p.month, day=p.day) }}">전체 저장 ({{ ns.total }})</a>
+        {% for grp in p.sessions %}
+          <form method="post" action="{{ url_for('delete_captures') }}" onsubmit="return confirm('선택한 이미지를 삭제할까요?');" class="session-block">
+            <input type="hidden" name="year" value="{{ p.year }}">
+            <input type="hidden" name="month" value="{{ p.month }}">
+            <div class="panel-head">
+              <span class="panel-date">{{ p.date_str }} ({{ grp.time_str }})</span>
+              <div class="panel-actions">
+                <button type="submit" class="delete-btn">선택 삭제</button>
+                <a class="save-all-btn" href="{{ url_for('download_session', session_id=grp.session_id) }}">전체 저장 ({{ grp.shots|length }})</a>
+              </div>
             </div>
-          </div>
-          {% for grp in p.sessions %}
-            <div class="session-time-label">{{ grp.time_str }}</div>
             <div class="panel-grid">
               {% for s in grp.shots %}
                 <div class="panel-tile">
@@ -96,8 +93,8 @@
                 </div>
               {% endfor %}
             </div>
-          {% endfor %}
-        </form>
+          </form>
+        {% endfor %}
       </div>
     {% endfor %}
   </div>
@@ -213,11 +210,11 @@
                 return '<div class="panel-tile"><img src="' + s.image_url + '" alt="' + s.label + '">' +
                   '<div class="panel-meta"><span class="panel-label">' + s.label + ' #' + s.sequence + '</span></div></div>';
               }).join('');
-              return '<div class="session-time-label">' + grp.time_str + '</div>' +
-                '<div class="compare-result-shots">' + tiles + '</div>';
+              return '<div class="session-block"><span class="panel-date">' + day.date_str + ' (' + grp.time_str + ')</span>' +
+                '<div class="compare-result-shots">' + tiles + '</div></div>';
             }).join('');
             if (!day.sessions.length) body = '<div class="empty">이 날짜에는 기록이 없습니다.</div>';
-            return '<div class="compare-result-col"><span class="panel-date">' + day.date_str + '</span>' + body + '</div>';
+            return '<div class="compare-result-col">' + body + '</div>';
           }
           container.innerHTML = '<div class="compare-result"><div class="compare-result-grid">' +
             renderCol(data.a) + renderCol(data.b) + '</div></div>';
