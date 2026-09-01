@@ -21,7 +21,7 @@
   </div>
 
   <div class="compare-toggle-row">
-    <button type="button" id="compareToggleBtn" class="compare-toggle" onclick="toggleCompareMode()">비교 모드</button>
+    <button type="button" id="compareToggleBtn" class="compare-toggle" onclick="toggleCompareMode()">비교하기</button>
     <span id="compareHint" class="compare-hint" style="visibility:hidden;">날짜 2개를 선택하세요 (<span id="compareCount">0</span>/2)</span>
   </div>
 
@@ -98,23 +98,44 @@
   </div>
 
   <script>
-    let compareMode = false;
+    const CM_KEY = 'sa_compareMode';
+    const CS_KEY = 'sa_compareSelection';
+
+    let compareMode = sessionStorage.getItem(CM_KEY) === '1';
     let compareSelection = [];
+    try {
+      compareSelection = JSON.parse(sessionStorage.getItem(CS_KEY) || '[]');
+    } catch (e) {
+      compareSelection = [];
+    }
+
+    function saveCompareState() {
+      sessionStorage.setItem(CM_KEY, compareMode ? '1' : '0');
+      sessionStorage.setItem(CS_KEY, JSON.stringify(compareSelection));
+    }
 
     function toggleCompareMode() {
       compareMode = !compareMode;
       compareSelection = [];
+      saveCompareState();
+      applyCompareModeUI();
+    }
+
+    function applyCompareModeUI() {
       document.getElementById('compareToggleBtn').classList.toggle('active', compareMode);
       document.getElementById('compareHint').style.visibility = compareMode ? 'visible' : 'hidden';
       updateCompareCount();
+
       document.querySelectorAll('.cal-cell.compare-picked').forEach(c => c.classList.remove('compare-picked'));
       if (compareMode) {
         document.querySelectorAll('.day-panel').forEach(p => p.style.display = 'none');
         document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
+        compareSelection.forEach(dateStr => {
+          const cell = document.querySelector('.cal-cell[data-date="' + dateStr + '"]');
+          if (cell) cell.classList.add('compare-picked');
+        });
       }
-      const bar = document.getElementById('compareBar');
-      if (bar) bar.remove();
-      document.getElementById('compareResult').innerHTML = '';
+      renderCompareBar();
     }
 
     function updateCompareCount() {
@@ -135,20 +156,22 @@
       if (!cell) return;
       const dateStr = cell.getAttribute('data-date');
 
-      const idx = compareSelection.findIndex(x => x.key === key);
+      const idx = compareSelection.indexOf(dateStr);
       if (idx !== -1) {
         compareSelection.splice(idx, 1);
         cell.classList.remove('compare-picked');
         updateCompareCount();
+        saveCompareState();
         renderCompareBar();
         return;
       }
 
       if (compareSelection.length >= 2) return;
 
-      compareSelection.push({ key, dateStr });
+      compareSelection.push(dateStr);
       cell.classList.add('compare-picked');
       updateCompareCount();
+      saveCompareState();
       renderCompareBar();
     }
 
@@ -162,12 +185,12 @@
       bar = document.createElement('div');
       bar.id = 'compareBar';
       bar.className = 'compare-bar';
-      const a = compareSelection[0].dateStr;
-      const b = compareSelection[1].dateStr;
+      const a = compareSelection[0];
+      const b = compareSelection[1];
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'compare-go-btn';
-      btn.textContent = '비교하기';
+      btn.textContent = '확인';
       btn.onclick = function () { loadCompareResult(a, b); };
       bar.appendChild(btn);
       document.querySelector('.month-blocks').insertAdjacentElement('afterend', bar);
@@ -203,8 +226,12 @@
       if (cell) cell.classList.add('selected');
       if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+
+    applyCompareModeUI();
     {% if default_panel %}
-      showDay('{{ default_panel }}');
+      if (!compareMode) {
+        showDay('{{ default_panel }}');
+      }
     {% endif %}
   </script>
 {% endblock %}
