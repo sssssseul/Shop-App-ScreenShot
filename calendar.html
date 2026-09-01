@@ -217,11 +217,11 @@
                 return '<div class="panel-tile"><img src="' + s.image_url + '" alt="' + s.label + '">' +
                   '<div class="panel-meta"><span class="panel-label">' + s.label + ' #' + s.sequence + '</span></div></div>';
               }).join('');
-              return '<div class="session-block"><span class="panel-date">' + day.date_str + ' (' + grp.time_str + ')</span>' +
+              return '<div class="session-block"><span class="panel-date session-sub-date">' + grp.time_str + '</span>' +
                 '<div class="compare-result-shots">' + tiles + '</div></div>';
             }).join('');
             if (!day.sessions.length) body = '<div class="empty">이 날짜에는 기록이 없습니다.</div>';
-            return '<div class="compare-result-col">' + body + '</div>';
+            return '<div class="compare-result-col"><div class="compare-col-title">' + day.date_str + '</div>' + body + '</div>';
           }
           container.innerHTML = '<div class="compare-result"><div class="compare-result-grid">' +
             renderCol(data.a) + renderCol(data.b) + '</div></div>';
