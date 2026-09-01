@@ -272,10 +272,13 @@ button.submit:hover { background: #16265a; }
 .compare-go-btn:hover { filter: brightness(1.1); }
 
 .compare-result { margin-top: 20px; }
-.compare-result-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
-.compare-result-col { padding-top: 18px; border-top: 1px solid var(--border); }
-.compare-result-col:first-child { padding-top: 0; border-top: none; }
-.compare-result-col .panel-date { margin-bottom: 12px; display: block; }
+.compare-result-grid { display: grid; grid-template-columns: 1fr; gap: 28px; }
+.compare-result-col { padding: 16px; background: #f6f8fa; border-radius: 14px; border: 1px solid var(--border); }
+.compare-col-title {
+  font-size: 15px; font-weight: 800; color: var(--navy);
+  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--navy);
+}
+.session-sub-date { font-size: 12px; color: var(--ink-soft); font-weight: 600; margin-bottom: 8px; display: block; }
 .compare-result-shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 12px; }
 
 /* Compare page */
