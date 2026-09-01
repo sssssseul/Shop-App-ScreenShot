@@ -113,10 +113,19 @@ def calendar_view():
         })
 
         for d, shots in by_day.items():
+            sessions = {}
+            for s in shots:
+                sessions.setdefault(s["session_id"], []).append(s)
+            session_list = [
+                {"time_str": grp[0]["captured_at"].strftime("%H:%M"), "shots": grp}
+                for grp in sessions.values()
+            ]
+            session_list.sort(key=lambda g: g["shots"][0]["captured_at"])
+
             panels[f"{m_m}-{d}"] = {
                 "date_str": f"{y_m}-{m_m:02d}-{d:02d}",
                 "year": y_m, "month": m_m, "day": d,
-                "shots": shots,
+                "sessions": session_list,
             }
             if offset == 0:
                 if center_default_day is None or d > center_default_day:
@@ -195,7 +204,7 @@ def download_day(year, month, day):
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        """SELECT label, sequence, content_type, image_data
+        """SELECT label, sequence, content_type, image_data, captured_at
            FROM captures
            WHERE EXTRACT(YEAR FROM captured_at) = %s
              AND EXTRACT(MONTH FROM captured_at) = %s
@@ -216,9 +225,10 @@ def download_day(year, month, day):
         for r in rows:
             ext = mimetypes.guess_extension(r["content_type"]) or ".png"
             safe_label = re.sub(r"[^\w\-가-힣]+", "_", r["label"]).strip("_") or "capture"
-            fname = f"{safe_label}_{r['sequence']:02d}{ext}"
+            time_folder = r["captured_at"].strftime("%H-%M")
+            fname = f"{time_folder}/{safe_label}_{r['sequence']:02d}{ext}"
             while fname in used_names:
-                fname = f"{safe_label}_{r['sequence']:02d}_{uuid.uuid4().hex[:4]}{ext}"
+                fname = f"{time_folder}/{safe_label}_{r['sequence']:02d}_{uuid.uuid4().hex[:4]}{ext}"
             used_names.add(fname)
             zf.writestr(fname, r["image_data"])
     buf.seek(0)
@@ -254,11 +264,21 @@ def _fetch_day_shots(cur, date_str):
         """SELECT id, session_id, label, sequence, captured_at
            FROM captures
            WHERE DATE(captured_at) = %s
-           ORDER BY sequence ASC""",
+           ORDER BY captured_at ASC, sequence ASC""",
         (date(y, m, d),),
     )
     shots = cur.fetchall()
-    return {"date_str": date_str, "shots": shots}
+
+    sessions = {}
+    for s in shots:
+        sessions.setdefault(s["session_id"], []).append(s)
+    session_list = [
+        {"time_str": grp[0]["captured_at"].strftime("%H:%M"), "shots": grp}
+        for grp in sessions.values()
+    ]
+    session_list.sort(key=lambda g: g["shots"][0]["captured_at"])
+
+    return {"date_str": date_str, "sessions": session_list}
 
 
 @app.route("/compare_data")
@@ -279,14 +299,20 @@ def compare_data():
     def serialize(day):
         return {
             "date_str": day["date_str"],
-            "shots": [
+            "sessions": [
                 {
-                    "id": s["id"],
-                    "label": s["label"],
-                    "sequence": s["sequence"],
-                    "image_url": url_for("image", capture_id=s["id"]),
+                    "time_str": grp["time_str"],
+                    "shots": [
+                        {
+                            "id": s["id"],
+                            "label": s["label"],
+                            "sequence": s["sequence"],
+                            "image_url": url_for("image", capture_id=s["id"]),
+                        }
+                        for s in grp["shots"]
+                    ],
                 }
-                for s in day["shots"]
+                for grp in day["sessions"]
             ],
         }
 
