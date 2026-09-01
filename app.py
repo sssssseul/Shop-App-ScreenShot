@@ -117,8 +117,12 @@ def calendar_view():
             for s in shots:
                 sessions.setdefault(s["session_id"], []).append(s)
             session_list = [
-                {"time_str": grp[0]["captured_at"].strftime("%H:%M"), "shots": grp}
-                for grp in sessions.values()
+                {
+                    "session_id": sid,
+                    "time_str": grp[0]["captured_at"].strftime("%H:%M"),
+                    "shots": grp,
+                }
+                for sid, grp in sessions.items()
             ]
             session_list.sort(key=lambda g: g["shots"][0]["captured_at"])
 
@@ -234,6 +238,42 @@ def download_day(year, month, day):
     buf.seek(0)
 
     zip_name = f"{year}-{month:02d}-{day:02d}.zip"
+    return send_file(buf, mimetype="application/zip", as_attachment=True, download_name=zip_name)
+
+
+@app.route("/download_session/<session_id>")
+def download_session(session_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
+        """SELECT label, sequence, content_type, image_data, captured_at
+           FROM captures
+           WHERE session_id = %s
+           ORDER BY sequence ASC""",
+        (session_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    if not rows:
+        abort(404)
+
+    buf = BytesIO()
+    used_names = set()
+    with ZipFile(buf, "w") as zf:
+        for r in rows:
+            ext = mimetypes.guess_extension(r["content_type"]) or ".png"
+            safe_label = re.sub(r"[^\w\-가-힣]+", "_", r["label"]).strip("_") or "capture"
+            fname = f"{safe_label}_{r['sequence']:02d}{ext}"
+            while fname in used_names:
+                fname = f"{safe_label}_{r['sequence']:02d}_{uuid.uuid4().hex[:4]}{ext}"
+            used_names.add(fname)
+            zf.writestr(fname, r["image_data"])
+    buf.seek(0)
+
+    stamp = rows[0]["captured_at"].strftime("%Y-%m-%d_%H-%M")
+    zip_name = f"{stamp}.zip"
     return send_file(buf, mimetype="application/zip", as_attachment=True, download_name=zip_name)
 
 
